@@ -16,7 +16,27 @@ type IrcConnection struct {
 	reader *bufio.Reader
 }
 
-func (c *IrcConnection) Run() error {
+type IrcMessageHandler interface {
+	Handle(string) error
+}
+
+type SayHiMessageHandler struct {
+	IrcConn IrcConnection
+}
+
+func NewSayHiMessageHandler(c IrcConnection) SayHiMessageHandler {
+	return SayHiMessageHandler{IrcConn: c}
+}
+
+func (h *SayHiMessageHandler) Handle(msg string) error {
+	saidHi, _ := regexp.MatchString("hi bot", msg)
+	if saidHi {
+		h.IrcConn.ChannelSay("Hi!")
+	}
+	return nil
+}
+
+func (c *IrcConnection) Run(h IrcMessageHandler) error {
 	r, _ := regexp.Compile("^PING :([^\n]+)\n")
 	defer c.conn.Close()
 	for{
@@ -27,12 +47,12 @@ func (c *IrcConnection) Run() error {
 		if len(msg)>0 {
 			fmt.Printf(msg)
 		}
-		saidHi, _ := regexp.MatchString("hi bot", msg)
-		if saidHi {
-			c.ChannelSay("Hi!")
+		err = h.Handle(msg)
+		if err != nil {
+			return err
 		}
-		matches := r.FindStringSubmatch(msg)
 		
+		matches := r.FindStringSubmatch(msg)
 		if len(matches) > 1 {
 			c.Say("PONG " + matches[1])
 		}
@@ -76,8 +96,8 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	
-	c.Run()
+	h := NewSayHiMessageHandler(c)
+	c.Run(&h)
 }
 
 
