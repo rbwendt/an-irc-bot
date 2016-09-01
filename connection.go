@@ -27,10 +27,14 @@ func (c *IrcConnection) Run() error {
 		if len(msg)>0 {
 			fmt.Printf(msg)
 		}
+		saidHi, _ := regexp.MatchString("hi bot", msg)
+		if saidHi {
+			c.ChannelSay("Hi!")
+		}
 		matches := r.FindStringSubmatch(msg)
 		
 		if len(matches) > 1 {
-			c.Say(fmt.Sprintf("PONG %", matches[1]))
+			c.Say("PONG " + matches[1])
 		}
 	}
 }
@@ -38,6 +42,10 @@ func (c *IrcConnection) Run() error {
 func (c *IrcConnection) Say(msg string) {
 	fmt.Println(msg)
 	fmt.Fprintf(c.conn, fmt.Sprintf("%s\n", msg))
+}
+
+func (c *IrcConnection) ChannelSay(msg string) {
+	c.Say("PRIVMSG #" + c.channel + " :" + msg)
 }
 
 func NewIrcConnection(address string, nick string, channel string) (IrcConnection, error) {
