@@ -18,5 +18,3 @@ func main() {
 	h := sh.NewSayHiMessageHandler(c)
 	c.Run(&h)
 }
-
-
