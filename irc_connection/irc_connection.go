@@ -1,11 +1,10 @@
-package main
+package irc_connection
 
 import (
-    "bufio"
-    "fmt"
-    "net"
-    "os"
-    "regexp"
+	"bufio"
+	"fmt"
+	"net"
+	"regexp"
 )
 
 type IrcConnection struct {
@@ -18,22 +17,6 @@ type IrcConnection struct {
 
 type IrcMessageHandler interface {
 	Handle(string) error
-}
-
-type SayHiMessageHandler struct {
-	IrcConn IrcConnection
-}
-
-func NewSayHiMessageHandler(c IrcConnection) SayHiMessageHandler {
-	return SayHiMessageHandler{IrcConn: c}
-}
-
-func (h *SayHiMessageHandler) Handle(msg string) error {
-	saidHi, _ := regexp.MatchString("hi bot", msg)
-	if saidHi {
-		h.IrcConn.ChannelSay("Hi!")
-	}
-	return nil
 }
 
 func (c *IrcConnection) Run(h IrcMessageHandler) error {
@@ -88,16 +71,4 @@ func NewIrcConnection(address string, nick string, channel string) (IrcConnectio
 
 	return connection, nil
 }
-
-func main() {
-	c, err := NewIrcConnection("irc.freenode.net:6667", "IrcBot70100", "fun_channel")
-	
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	h := NewSayHiMessageHandler(c)
-	c.Run(&h)
-}
-
 
